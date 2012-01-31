@@ -127,7 +127,7 @@ std::vector<Cell> TopologyGrid2D::GetDTRidge() {
 		for( int j = 0; j < mSizeY; ++j ) {
 
 			int x = ref( i, j );
-			p.x = i, p.y = j; 
+			p.x = i; p.y = j; 
 			if( mG->GetState( p ) != true && IsLocalMaxima( x ) == true ) {		
 				ridge.push_back( mCells[x] );
 			}			

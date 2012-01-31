@@ -59,7 +59,10 @@ void HomoSearch::searchRidge() {
 
 		for( int j = 0; j < size; ++j ) {
 		    uintptr_t near = (uintptr_t) kd_res_item_data( neighset ); 
-			node.neighbors.push_back( near );
+
+			if( near != node.index ) { 
+				node.neighbors.push_back( near );
+			}
 			kd_res_next( neighset );			
 		}
 
