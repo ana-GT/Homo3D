@@ -48,6 +48,7 @@ public:
 	std::vector<Pos> FindPath( double _startX, double _startY, double _goalX, double _goalY );
 	std::vector< std::vector<Pos> > FindDiversePaths( double _startX, double _startY, double _goalX, double _goalY, int _times );
     void UpdateNodeValues( std::vector<int> _path );
+	std::vector<int> JoinPaths( std::vector< std::vector<int> >  _allPaths );
     void ResetSearch();
 	void pushOpenSet( int _key );
 	int popOpenSet();

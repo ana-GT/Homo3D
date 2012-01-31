@@ -121,9 +121,9 @@ int main( int argc, char *argv[] ) {
 
 					case 'x': {
 						printf("-- Doing the search \n");
-						mSearch = new Search( &gRidge );
-						//Search search( &( tg2d.GetFreeCells() ) );
-						gPaths =  mSearch->FindDiversePaths( mStart.x, mStart.y, mGoal.x, mGoal.y, 20 );
+						//mSearch = new Search( &gRidge );
+						mSearch  = new Search( &( tg2d.GetFreeCells() ) );
+						gPaths =  mSearch->FindDiversePaths( mStart.x, mStart.y, mGoal.x, mGoal.y, 15 );
 						numPaths = gPaths.size();
 						countPath = 0;
 						//printPaths();

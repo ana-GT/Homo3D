@@ -90,18 +90,38 @@ std::vector<std::vector<Pos> > Search::FindDiversePaths( double _startX, double 
 
 	std::vector< std::vector<Pos> >  diversePaths;
 	std::vector<Pos> path;
+	std::vector< std::vector<int> > nodePaths;
+	std::vector<int> allNodePaths;
 
 	for( int i = 0; i < _times; i++ ) {
 		path.resize(0);
 		path = FindPath( _startX, _startY, _goalX, _goalY );
 		diversePaths.push_back( path );
+		nodePaths.push_back( mPath );
 		// Update the values
-		UpdateNodeValues( mPath );
+		allNodePaths = JoinPaths( nodePaths );
+		UpdateNodeValues( allNodePaths );
 		// Reset the search
 		ResetSearch();
 	}
 	
 	return diversePaths;
+}
+
+/**
+ * @function JoinPaths
+ */
+std::vector<int> Search::JoinPaths( std::vector< std::vector<int> >  _allPaths ) {
+
+	std::vector<int> bunchPaths;
+
+	for( int i = 0; i < _allPaths.size(); ++i ) {
+		for( int j = 0; j < _allPaths[i].size(); ++j ) {
+			bunchPaths.push_back( _allPaths[i][j] );			
+		}
+	}
+
+	return bunchPaths;
 }
 
 /**
@@ -183,7 +203,7 @@ void Search::UpdateNodeValues( std::vector<int> _path ) {
 
 	//-- Add accordingly
 	for( int i = 0; i < mNumCells; ++i ) {
-		mNodes[i].value += ( maxBrushDist - mNodes[i].brushDistance );
+		mNodes[i].value = ( maxBrushDist - mNodes[i].brushDistance ) + sNominalValue;
 	}
 
 }
