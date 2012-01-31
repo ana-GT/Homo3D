@@ -68,4 +68,18 @@ inline int Grid3D::GetSizeZ() const {
 	return mSizeZ;
 }
 
+/**
+ * @function ref
+ */
+inline int Grid3D::ref( Pos _p ) const {
+	return  (_p.x)*mStride1 + _p.y*mStride2 + _p.z;
+}
+
+/**
+ * @function ref
+ */
+inline int Grid3D::ref( int _x, int _y, int _z ) const {
+	return _x*mStride1 + _y*mStride2 + _z;
+}
+
 #endif /** _HP2D_GRID_3D_H_  */

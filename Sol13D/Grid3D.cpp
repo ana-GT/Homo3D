@@ -87,20 +87,6 @@ void Grid3D::SetState( int _x, int _y, int _z, bool _state ) {
 }
 
 
-/**
- * @function ref
- */
-inline int Grid3D::ref( Pos _p ) const {
-	return  (_p.x)*mStride1 + _p.y*mStride2 + _p.z;
-}
-
-/**
- * @function ref
- */
-int Grid3D::ref( int _x, int _y, int _z ) const {
-	return _x*mStride1 + _y*mStride2 + _z;
-}
-
 //////////// UTILITY ////////////////
 
 /**
