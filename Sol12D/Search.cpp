@@ -259,12 +259,34 @@ std::vector<Pos> Search::FindPath( double _startX, double _startY, double _goalX
 		//-- Check if it is goal
 		if( x == goalCell ) {
 		
-			printf( "--> Found a path! \n" ); tracePath( x, path ); break;
+			printf( "--> Found a path! \n" ); tracePath( x, path ); 
+
+			if( path.size() < 18 ) {
+				break;
+			}
+			else { 
+				mNodes[x].costF = SEARCH_INF;
+				mNodes[x].costG = SEARCH_INF;
+				mNodes[x].costH = SEARCH_INF;
+				mNodes[x].status = IN_NO_SET;
+				mNodes[x].parent = -1;
+				path.resize(0);
+
+					
+				try {
+					x = popOpenSet();
+				} catch( int i ) {
+					printf( "-- (%d) No more nodes to pop out \n", i );
+					break;
+				}
+			}
+			
 		}
-		
+
 		//-- Add node to closed set
 		mNodes[x].status = IN_CLOSED_SET;
 		std::vector<int> neighbors = mNodes[x].neighbors;
+
 
 		//-- 
 		for( int i = 0; i < neighbors.size(); i++ ) {
@@ -294,10 +316,16 @@ std::vector<Pos> Search::FindPath( double _startX, double _startY, double _goalX
 			}
 		} //-- End for every neighbor
 
-		
 	} //-- End of while
 
 	printf("I am done \n");
+	count = 0;
+	for( int i = 0; i < mNodes.size(); ++i ) {
+		if( mNodes[i].status == IN_CLOSED_SET ) {
+			count++;
+		}
+	}
+	printf("In closed set: %d \n", count);
 	return path;
 		
 }

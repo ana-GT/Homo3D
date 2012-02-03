@@ -123,7 +123,7 @@ int main( int argc, char *argv[] ) {
 						printf("-- Doing the search \n");
 						//mSearch = new Search( &gRidge );
 						mSearch  = new Search( &( tg2d.GetFreeCells() ) );
-						gPaths =  mSearch->FindDiversePaths( mStart.x, mStart.y, mGoal.x, mGoal.y, 15 );
+						gPaths =  mSearch->FindDiversePaths( mStart.x, mStart.y, mGoal.x, mGoal.y, 3 );
 						numPaths = gPaths.size();
 						countPath = 0;
 						//printPaths();
@@ -223,8 +223,8 @@ void calculateDT( TopologyGrid2D *_tg2d ) {
  */
 bool init() {
 
-	SIZE_X = 18; 
-    SIZE_Y = 18;	
+	SIZE_X = 12; // 18 
+    SIZE_Y = 12;	
 
 
 	SCREEN_WIDTH = TILE_WIDTH*SIZE_X;

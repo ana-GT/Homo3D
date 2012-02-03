@@ -12,13 +12,16 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <limits.h>
+#include <float.h>
 
 
 int TopologyGrid3D::NX[26] = {-1,-1,1, 1,-1,-1, 1, 1,-1,-1,1, 1, 0,-1,0,1, 0,-1, 0, 1,-1,0,1, 0,0, 0};
 int TopologyGrid3D::NY[26] = {-1, 1,1,-1,-1, 1, 1,-1,-1, 1,1,-1,-1, 0,1,0,-1, 0, 1, 0, 0,1,0,-1,0, 0};
 int TopologyGrid3D::NZ[26] = { 1, 1,1, 1,-1,-1,-1,-1, 0, 0,0, 0, 1, 1,1,1,-1,-1,-1,-1, 0,0,0, 0,1,-1};
 
-const int TopologyGrid3D::TG3D_INF = INT_MAX;
+const double TopologyGrid3D::TG3D_INF = DBL_MAX;
+const double TopologyGrid3D::TG3D_SQRT2 = 1.414;
+const double TopologyGrid3D::TG3D_SQRT3 = 1.732;	
 
 
 /**
@@ -96,10 +99,10 @@ void TopologyGrid3D::CalculateDT() {
 
 		for( int i = 0; i < queue.size(); ++i ) {
 			std::vector<int> n = mCells[ queue[i] ].neighbors;
-			int dist = mCells[ queue[i] ].distance;
+			double dist = mCells[ queue[i] ].distance;
 
 			for( int j = 0; j < n.size(); ++j ) {
-				int new_dist = dist + EdgeCost( queue[i], n[j] );
+				double new_dist = dist + EdgeCost( queue[i], n[j] );
 				if( new_dist < mCells[ n[j] ].distance ) {
 					mCells[ n[j] ].distance = new_dist;
 					newQueue.push_back( n[j] );
@@ -119,23 +122,22 @@ void TopologyGrid3D::CalculateDT() {
  * @function EdgeCost
  */
 
-int TopologyGrid3D::EdgeCost( int _n1, int _n2 ) {
+double TopologyGrid3D::EdgeCost( int _n1, int _n2 ) {
 
-	int dx = abs( mCells[_n1].pos.x - mCells[_n2].pos.x ); 
-	int dy = abs( mCells[_n1].pos.y - mCells[_n2].pos.y );
- 	int dz = abs( mCells[_n1].pos.z - mCells[_n2].pos.z );
+	Pos p1 = mCells[_n1].pos;
+	Pos p2 = mCells[_n2].pos;
 
-    int d = dx + dy + dz;
+    int d = abs( p1.x - p2.x ) + abs( p1.y - p2.y ) + abs( p1.z - p2.z );
 
 	if( d == 3 ) {
-		return 17; // sqrt(3)
+		return TG3D_SQRT3; // sqrt(3)
 	}
 
 	else if( d == 2 ) {
-		return 14; // sqrt(2)
+		return TG3D_SQRT2; // sqrt(2)
 	}
 	else if( d == 1 ) {
-		return 10; // 1
+		return 1.0; // 1
 	}
 	else {
 		printf( "--> WTH. There is an error here! \n" );
@@ -149,15 +151,13 @@ int TopologyGrid3D::EdgeCost( int _n1, int _n2 ) {
 std::vector<Cell> TopologyGrid3D::GetDTRidge() {
 
 	std::vector<Cell> ridge;
-	Pos p;
 	
 	for( int i = 0; i < mSizeX; ++i ) {
 		for( int j = 0; j < mSizeY; ++j ) {
 			for( int k = 0; k < mSizeZ; ++k ) {
 
 				int x = ref( i, j, k );
-				p.x = i; p.y = j;  p.z = k; 
-				if( mG->GetState( p ) != true && IsLocalMaxima( x ) == true ) {		
+				if( mG->GetState( i, j, k ) != true && IsLocalMaxima( x ) == true ) {		
 					ridge.push_back( mCells[x] );
 				}		
 			}		
@@ -174,14 +174,12 @@ std::vector<Cell> TopologyGrid3D::GetDTRidge() {
 std::vector<Cell> TopologyGrid3D::GetFreeCells() {
 
 	std::vector<Cell> free;
-	Pos p;
 
 	for( int i = 0; i < mSizeX; ++i ) {
 		for( int j = 0; j < mSizeY; ++j ) {
 			for( int k = 0; k < mSizeZ; ++k ) {
 				int x = ref( i, j, k );
-				p.x = i, p.y = j; p.z = k; 
-				if( mG->GetState( p ) != true) {		
+				if( mG->GetState( i, j, k ) != true) {		
 					free.push_back( mCells[x] );
 				}
 			}			
@@ -200,20 +198,20 @@ std::vector<Cell> TopologyGrid3D::GetFreeCells() {
 bool TopologyGrid3D::IsLocalMaxima( int _index ) {
 
 	Cell c = mCells[ _index ];
-	int dist = c.distance;		
+	double dist = c.distance;		
 	std::vector<int> nx = c.neighbors;
 
 	for( int i = 0; i < nx.size(); ++i ) {
 
 		Cell n = mCells[nx[i]];
 
-		if( EdgeCost( nx[i], _index ) == 10 && n.distance >= c.distance + 10  ) {
+		if( EdgeCost( nx[i], _index ) == 1.0 && n.distance >= c.distance + 1.0  ) {
 			return false;		
 		}
-		else if( EdgeCost( nx[i], _index ) == 14 && n.distance >= c.distance  + 10 ) {		
+		else if( EdgeCost( nx[i], _index ) == TG3D_SQRT2 && n.distance >= c.distance  + TG3D_SQRT2 ) {		
 			return false;
 		}
-		else if( EdgeCost( nx[i], _index ) == 17 && n.distance >= c.distance  + 10 ) {		
+		else if( EdgeCost( nx[i], _index ) == TG3D_SQRT3 && n.distance >= c.distance  + TG3D_SQRT3 ) {		
 			return false;
 		}
 	}

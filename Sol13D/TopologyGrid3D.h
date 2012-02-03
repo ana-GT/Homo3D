@@ -16,7 +16,7 @@
 struct Cell {
 	Pos pos;
 	std::vector<int> neighbors;
-	int distance;
+	double distance;
 	int index;
 };
 
@@ -32,7 +32,7 @@ public:
 	~TopologyGrid3D();	
 	int ref( int _x, int _y, int _z );
 	bool IsValid( int _x, int _y, int _z );
-	int EdgeCost( int n1, int n2 );
+	double EdgeCost( int n1, int n2 );
 	std::vector<int> GetNeighbors( Pos _p ); 
     void CalculateDT();
 	std::vector<Cell> GetDTRidge();
@@ -54,7 +54,9 @@ public:
 	static int NX[];
 	static int NY[];
 	static int NZ[];
-	static const int TG3D_INF;
+	static const double TG3D_INF;
+	static const double TG3D_SQRT2;
+	static const double TG3D_SQRT3;	
 };
 
 

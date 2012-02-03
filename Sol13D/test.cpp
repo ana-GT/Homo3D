@@ -33,10 +33,11 @@ int main( int argc, char *argv[] ) {
     Grid3D g( 80, 80, 80 );
 	//-- Put the obstacles in the borders
     g.CreateExternalBoundary();
-	g.CreateBox( 30, 30, 30, 20, 20, 20 );
+	g.CreateBox( 20, 20, 10, 10, 40, 60 );
+	g.CreateBox( 50, 20, 10, 10, 40, 60 );
 
 	//-- See how it looks
-	//g.Visualization();
+	g.Visualization();
 
 	//-- Create its DT
 	printf(" Creating Topology 3D guy \n");
