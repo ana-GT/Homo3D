@@ -56,7 +56,7 @@ int main( int argc, char *argv[] ) {
 
 	printf(" Start search \n");
 	int n = gRidge.size() - 1;
-	std::vector< std::vector<Pos> >  paths = mSearch->FindDiversePaths( gRidge[0].pos.x, gRidge[0].pos.y, gRidge[0].pos.z, gRidge[n].pos.x, gRidge[n].pos.y, gRidge[n].pos.z, 2 );
+	std::vector< std::vector<Pos> >  paths = mSearch->FindDiversePaths( gRidge[0].pos.x, gRidge[0].pos.y, gRidge[0].pos.z, gRidge[n].pos.x, gRidge[n].pos.y, gRidge[n].pos.z, 4 );
 	printf("End Search \n");
 	DrawResult( &g, paths );
 
