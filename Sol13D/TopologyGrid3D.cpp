@@ -38,13 +38,15 @@ TopologyGrid3D::TopologyGrid3D( Grid3D *_g ) {
 	mStride1 = mSizeY*mSizeZ;
 	mStride2 = mSizeZ;
 
+	mCells = new Cell[mNumCells];
+
     Cell cell; Pos p; int index;
 
 	//-- Create basic nodes
 	index = 0;
-	for( int i = 0; i < _g->GetSizeX(); ++i ) {
-		for( int j = 0; j <	_g->GetSizeY(); ++j ) {
-			for( int k = 0; k <	_g->GetSizeZ(); ++k ) {
+	for( int i = 0; i < mSizeX; ++i ) {
+		for( int j = 0; j <	mSizeY; ++j ) {
+			for( int k = 0; k <	mSizeZ; ++k ) {
 
 				p.x = i; p.y = j; p.z = k;
 				cell.pos = p;
@@ -52,8 +54,7 @@ TopologyGrid3D::TopologyGrid3D( Grid3D *_g ) {
 
 				cell.index = index;
 				cell.neighbors = GetNeighbors( p );
-				mCells.push_back( cell );
-			
+				mCells[index] = cell;	
 				index++;	
 			}		
 		}		
@@ -64,29 +65,27 @@ TopologyGrid3D::TopologyGrid3D( Grid3D *_g ) {
 /**
  * @function Destructor
  */
-
 TopologyGrid3D::~TopologyGrid3D( ) {
-
+	delete [] mCells;
 }
 
 /**
  * @function CalculateDT
  */
-
 void TopologyGrid3D::CalculateDT() {
 
+	printf("--) Calculating DT \n");
 	std::vector<int> queue;
 	
 	//-- 1. Initialize queue with obstacle grids and set distances to zero for them
 	for( int i = 0; i < mSizeX; ++i ) {
 		for( int j = 0; j < mSizeY; ++j ) {
 			for( int k = 0; k < mSizeZ; ++k ) {
-				Pos p; p.x = i; p.y = j; p.z = k;
 				int ind = ref( i, j, k );
 
-				if( mG->GetState( p ) == true ) {
+				if( mG->GetState( i, j, k ) == true ) {
 					queue.push_back( ind );
-					mCells[ ref( p.x, p.y, p.z )].distance = 0;
+					mCells[ ind ].distance = 0;
 				}
 			}
 		}
@@ -115,6 +114,7 @@ void TopologyGrid3D::CalculateDT() {
 		newQueue.clear();
 
 	}
+	printf("--) Finishing calculating DT \n");
 
 }
 
@@ -141,6 +141,7 @@ double TopologyGrid3D::EdgeCost( int _n1, int _n2 ) {
 	}
 	else {
 		printf( "--> WTH. There is an error here! \n" );
+		return TG3D_INF;
 	}
 }
 
@@ -208,7 +209,11 @@ bool TopologyGrid3D::IsLocalMaxima( int _index ) {
 		if( EdgeCost( nx[i], _index ) == 1.0 && n.distance >= c.distance + 1.0  ) {
 			return false;		
 		}
+<<<<<<< HEAD
 		else if( EdgeCost( nx[i], _index ) == TG3D_SQRT2 && n.distance >= c.distance  + 0.95 ) {		
+=======
+		else if( EdgeCost( nx[i], _index ) == TG3D_SQRT2 && n.distance >= c.distance  + 0.95 ) { // TG3D_SQRT2		
+>>>>>>> 8c82f7b2b80d0d1a1fe07e6349081307abb78ad3
 			return false;
 		}
 		else if( EdgeCost( nx[i], _index ) == TG3D_SQRT3 && n.distance >= c.distance  + TG3D_SQRT3 ) {		
@@ -236,7 +241,7 @@ std::vector<int> TopologyGrid3D::GetNeighbors( Pos _p ) {
 		nx = x + NX[i];
 		ny = y + NY[i];
 		nz = z + NZ[i];
-		if( IsValid( nx, ny, nz ) == true ) {
+		if( IsValid( nx, ny, nz ) == true && mG->GetState(nx, ny, nz) == false ) {
 			neighbors.push_back( ref(nx, ny, nz) );
 		}
 	}		

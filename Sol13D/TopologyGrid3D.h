@@ -49,7 +49,7 @@ public:
 	int mSizeZ;
 	int mStride1;
 	int mStride2;
-	std::vector<Cell> mCells;
+	Cell *mCells;
 
 	static int NX[];
 	static int NY[];
