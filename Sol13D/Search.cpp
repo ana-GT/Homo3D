@@ -16,45 +16,44 @@ const double Search::SEARCH_INF = DBL_MAX;
  */
 Search::Search( std::vector<Cell> *_cells ) {
 
-	mNumCells = _cells->size(); 
-	mCellNeighborRange = 1.8; // bigger than sqrt(3), smaller than 2
+	mNumNodes = _cells->size(); 
+	mNodeNeighborRange = 1.8; // bigger than sqrt(3), smaller than 2
 	mEpsilon = 1;
 
 	//-- 2. Add points to kd-tree and create the nodes
 	mKdTree = kd_create( 3 ); // 2-dimensional space
 
-	for( int i = 0; i < mNumCells; ++i ) { 
+	mNodes = new Node[mNumNodes];
+
+	for( int i = 0; i < mNumNodes; ++i ) { 
 		uintptr_t id = i; 
-		double x = (double) (*_cells)[i].pos.x;
-		double y = (double) (*_cells)[i].pos.y;
-		double z = (double) (*_cells)[i].pos.z;
+		Pos p = (*_cells)[i].pos;
 
 		Eigen::VectorXd entity(3); 
-		entity(0) = x; entity(1) = y; entity(2) = z;
+		entity<<  (double)p.x, (double)p.y, (double)p.z;
 		kd_insert( mKdTree, entity.data(), (void*)id );
 
 	    Node node; 
 		node.index = i; 
-		node.x = x; node.y = y; node.z = z;
+		node.pos = p;
 		node.status = IN_NO_SET;
 		node.value = sNominalValue;
-		node.costF = SEARCH_INF;
-		node.costG = SEARCH_INF;
-		node.costH = SEARCH_INF;
+		node.cost.F = SEARCH_INF;
+		node.cost.G = SEARCH_INF;
+		node.cost.H = SEARCH_INF;
 		node.parent = -1;
 	
-	    mNodes.push_back( node );
+	    mNodes[i] = node;
 	}
 	
 	//-- Fill the neighbors
-	for( int i = 0; i < mNumCells; ++i ) {
+	for( int i = 0; i < mNumNodes; ++i ) {
 	
 		Eigen::VectorXd entity(3); 
-		entity(0) = mNodes[i].x; 
-		entity(1) = mNodes[i].y;
- 		entity(2) = mNodes[i].z;
+		Pos p = mNodes[i].pos;
+		entity<< (double)p.x, (double)p.y, (double)p.z;
 
-		struct kdres* neighset = kd_nearest_range( mKdTree, entity.data(), (double)mCellNeighborRange );
+		struct kdres* neighset = kd_nearest_range( mKdTree, entity.data(), (double)mNodeNeighborRange );
 
 		int size = kd_res_size( neighset );
 
@@ -68,7 +67,8 @@ Search::Search( std::vector<Cell> *_cells ) {
 			kd_res_next( neighset );			
 		}
 
-		if( mNodes[i].neighbors.size() == 0 || mNodes[i].neighbors.size() > 26 ) {
+		size = mNodes[i].neighbors.size();
+		if( size == 0 || size > 26 ) {
 			printf("Error filling neighbors. Either too few or too much \n");
 		}
 
@@ -83,13 +83,14 @@ Search::Search( std::vector<Cell> *_cells ) {
  */
 Search::~Search() {
 	kd_free( mKdTree );
+	delete [] mNodes;
 }
 
 
 /**
  * @function FindDiversePaths
  */
-std::vector<std::vector<Pos> > Search::FindDiversePaths( double _startX, double _startY, double _startZ, double _goalX, double _goalY, double _goalZ, int _times ) {
+std::vector<std::vector<Pos> > Search::FindDiversePaths(  Pos _start, Pos _goal, int _times ) {
 
 	std::vector< std::vector<Pos> >  diversePaths;
 	std::vector<Pos> path;
@@ -98,7 +99,7 @@ std::vector<std::vector<Pos> > Search::FindDiversePaths( double _startX, double 
 
 	for( int i = 0; i < _times; i++ ) {
 		path.resize(0);
-		path = FindPath( _startX, _startY, _startZ, _goalX, _goalY, _goalZ );
+		path = FindPath( _start, _goal );
 		diversePaths.push_back( path );
 		nodePaths.push_back( mPath );
 		// Update the values
@@ -133,11 +134,10 @@ std::vector<int> Search::JoinPaths( std::vector< std::vector<int> >  _allPaths )
  */
 void Search::ResetSearch() {
 
-	for( int i = 0; i < mNumCells; ++i ) {
+	for( int i = 0; i < mNumNodes; ++i ) {
+		Cost c; c.F = SEARCH_INF; c.F = SEARCH_INF; c.H = SEARCH_INF;
+		mNodes[i].cost = c; 
 		mNodes[i].status = IN_NO_SET;
-		mNodes[i].costF = 0;
-		mNodes[i].costG = 0;
-		mNodes[i].costH = 0;
 	}
 
 	mOpenSet.resize(0);
@@ -152,7 +152,7 @@ void Search::UpdateNodeValues( std::vector<int> _path ) {
 	std::vector<int> queue = _path;
 	
 	//-- 1. Initialize queue with _path nodes and set distances to zero for them
-	for( int i = 0; i < mNumCells; ++i ) {
+	for( int i = 0; i < mNumNodes; ++i ) {
 		mNodes[i].brushDistance = SEARCH_INF;
 	}
 
@@ -191,7 +191,7 @@ void Search::UpdateNodeValues( std::vector<int> _path ) {
 	double minBrushDist = SEARCH_INF;
 	double maxBrushDist = -SEARCH_INF;
 
-	for( int i = 0; i < mNumCells; ++i ) {
+	for( int i = 0; i < mNumNodes; ++i ) {
 		if( mNodes[i].brushDistance < minBrushDist ) {
 			minBrushDist = mNodes[i].brushDistance;
 		}
@@ -206,7 +206,7 @@ void Search::UpdateNodeValues( std::vector<int> _path ) {
 
 
 	//-- Update accordingly
-	for( int i = 0; i < mNumCells; ++i ) {
+	for( int i = 0; i < mNumNodes; ++i ) {
 		mNodes[i].value = ( maxBrushDist - mNodes[i].brushDistance ) + sNominalValue;
 	}
 
@@ -215,36 +215,38 @@ void Search::UpdateNodeValues( std::vector<int> _path ) {
 /**
  * @function FindPath
  */
-std::vector<Pos> Search::FindPath( double _startX, double _startY, double _startZ,
-								   double _goalX, double _goalY, double _goalZ ) {
+std::vector<Pos> Search::FindPath( Pos _start, Pos _goal ) {
 	
-	int startCell; int goalCell;
+	int startNode; int goalNode;
 
 	//-- Search
-	for( int i = 0; i < mNumCells; ++i ) {
-		if( _startX == mNodes[i].x  && _startY == mNodes[i].y && _startZ == mNodes[i].z ) {
-			startCell = i; break; 
-		}
-	}
+	Eigen::VectorXd eStart(3);
+	eStart << (double)_start.x, (double)_start.y, (double)_start.z; 
+    struct kdres* result = kd_nearest( mKdTree, eStart.data() );
+	startNode = (int) kd_res_item_data(result);
 
-	for( int i = 0; i < mNumCells; ++i ) {
-		if( _goalX == mNodes[i].x  && _goalY == mNodes[i].y && _goalZ == mNodes[i].z ) {
-			goalCell = i; break;
-		}
-	}
+	Eigen::VectorXd eGoal(3);
+	eGoal << (double)_goal.x, (double)_goal.y, (double)_goal.z; 
+    result = kd_nearest( mKdTree, eGoal.data() );
+	goalNode = (int) kd_res_item_data(result);
 
-	printf("Start: %d Goal: %d \n", startCell, goalCell );
+	kd_res_free( result );
+
+
+	printf("Start: %d Goal: %d \n", startNode, goalNode );
 	printf( "-- Start search A* \n" );
 	
 	//-- Fill the starting state
-	mNodes[startCell].costG = 0;
-	mNodes[startCell].costH = costHeuristic( startCell, goalCell );
-	mNodes[startCell].costF = mNodes[startCell].costG + mEpsilon*mNodes[startCell].costH;
-	mNodes[startCell].parent = -1;
-	mNodes[startCell].status = IN_NO_SET;
+	Cost cost;
+	cost.G = 0;
+	cost.H = costHeuristic( startNode, goalNode );
+    cost.F = cost.G + mEpsilon*cost.H;
+	mNodes[startNode].cost = cost;
+	mNodes[startNode].parent = -1;
+	mNodes[startNode].status = IN_NO_SET;
 		
 	//-- Push it into the open set
-	pushOpenSet( startCell );
+	pushOpenSet( startNode );
 	
 	//-- Loop
 	int x;
@@ -263,7 +265,7 @@ std::vector<Pos> Search::FindPath( double _startX, double _startY, double _start
 		}
 
 		//-- Check if it is goal
-		if( x == goalCell ) {
+		if( x == goalNode ) {
 		
 			printf( "--> Found a path! \n" ); tracePath( x, path ); break;
 		}
@@ -279,21 +281,23 @@ std::vector<Pos> Search::FindPath( double _startX, double _startY, double _start
 			}
 			
 			int y = mNodes[ neighbors[i] ].index; // Same as neighbors[i] actually
-			double tentative_G_score = mNodes[x].costG + edgeCost( x, y, mNodes[y].value );
+			double tentative_G_score = mNodes[x].cost.G + edgeCost( x, y, mNodes[y].value );
 			
 			if( mNodes[y].status != IN_OPEN_SET ) {
 				mNodes[y].parent = x;
-				mNodes[y].costG = tentative_G_score;
-				mNodes[y].costH = costHeuristic( y, goalCell );
-				mNodes[y].costF = mNodes[y].costG + mEpsilon*mNodes[y].costH;
+				cost.G = tentative_G_score;
+				cost.H = costHeuristic( y, goalNode );
+				cost.F = cost.G + mEpsilon*cost.H;
+				mNodes[y].cost = cost;
 				pushOpenSet(y);
 			}
 			else {
-				if( tentative_G_score < mNodes[y].costG ) {
+				if( tentative_G_score < mNodes[y].cost.G ) {
 					mNodes[y].parent = x;
-					mNodes[y].costG = tentative_G_score;
-					mNodes[y].costH = costHeuristic( y, goalCell );
-					mNodes[y].costF = mNodes[y].costG + mEpsilon*mNodes[y].costH;
+					cost.G = tentative_G_score;
+					cost.H = costHeuristic( y, goalNode );
+					cost.F = cost.G + mEpsilon*cost.H;
+					mNodes[y].cost = cost;
 					//-- Reorder your OpenSet
 					updateLowerOpenSet( y );				
 				}
@@ -315,18 +319,12 @@ std::vector<Pos> Search::FindPath( double _startX, double _startY, double _start
 double Search::costHeuristic( int _start, int _goal ) {
 
 	//-- Base cost for a node: 1.0
+	Pos pStart = mNodes[_start].pos;
+	Pos pGoal = mNodes[_goal].pos;
 
-	double sx = mNodes[_start].x;
-	double sy = mNodes[_start].y;
-	double sz = mNodes[_start].z;
-
-	double gx = mNodes[_goal].x;
-	double gy = mNodes[_goal].y;
-	double gz = mNodes[_goal].z;
-
-	double dx = sx - gx;
-	double dy = sy - gy;
-	double dz = sz - gz;
+	double dx = pStart.x - pGoal.x;
+	double dy = pStart.y - pGoal.y;
+	double dz = pStart.z - pGoal.z;
 
 	return sqrt( dx*dx + dy*dy + dz*dz )*sNominalValue;
 
@@ -337,19 +335,10 @@ double Search::costHeuristic( int _start, int _goal ) {
  */
 double Search::edgeCost( int _nodeFrom, int _nodeTo, double _value ) {
 
-	double fromX = mNodes[_nodeFrom].x;
-	double fromY = mNodes[_nodeFrom].y;
-	double fromZ = mNodes[_nodeFrom].z;
+	Pos pFrom = mNodes[_nodeFrom].pos;
+	Pos pTo = mNodes[_nodeTo].pos;
 
-	double toX = mNodes[_nodeTo].x;
-	double toY = mNodes[_nodeTo].y;
-	double toZ = mNodes[_nodeTo].z;
-
-	double dX = abs( fromX - toX );
-	double dY = abs( fromY - toY );
-	double dZ = abs( fromZ - toZ );
-
-	double sum = dX + dY + dZ;
+	double sum = abs(pFrom.x - pTo.x) + abs(pFrom.y - pTo.y) + abs(pFrom.z - pTo.z);
 	if( sum == 1.0 ) {
 		return 1.0*_value;
 	}	
@@ -395,7 +384,7 @@ void Search::pushOpenSet( int _key ) {
   {
     parent = floor( (node - 1)/2 );
     // Always try to put new nodes up
-    if( mNodes[ mOpenSet[parent] ].costF >= mNodes[ mOpenSet[node] ].costF )
+    if( mNodes[ mOpenSet[parent] ].cost.F >= mNodes[ mOpenSet[node] ].cost.F )
       {
         temp = mOpenSet[parent];
         mOpenSet[parent] = mOpenSet[node];
@@ -443,14 +432,14 @@ int Search::popOpenSet() {
 
     if( child_2 < n )
      {  
-       if( mNodes[ mOpenSet[node] ].costF >= mNodes[ mOpenSet[child_1] ].costF )
+       if( mNodes[ mOpenSet[node] ].cost.F >= mNodes[ mOpenSet[child_1] ].cost.F )
         { u = child_1;  }
-       if( mNodes[ mOpenSet[u] ].costF  >= mNodes[ mOpenSet[child_2] ].costF )
+       if( mNodes[ mOpenSet[u] ].cost.F  >= mNodes[ mOpenSet[child_2] ].cost.F )
         { u = child_2; }
      }
     else if( child_1 < n )
      {
-       if( mNodes[ mOpenSet[node] ].costF >= mNodes[ mOpenSet[child_1] ].costF )
+       if( mNodes[ mOpenSet[node] ].cost.F >= mNodes[ mOpenSet[child_1] ].cost.F )
          { u = child_1; }
      }
     
@@ -496,7 +485,7 @@ void Search::updateLowerOpenSet( int key ) {
   { 
     parent = floor( (node - 1)/2 );
     // Always try to put new nodes up
-    if( mNodes[ mOpenSet[parent] ].costF > mNodes[ mOpenSet[node] ].costF )
+    if( mNodes[ mOpenSet[parent] ].cost.F > mNodes[ mOpenSet[node] ].cost.F )
       {
         //printf(" Parent pos: %d f: %f \n ", parent, nodes_[ openSet_[parent] ].f_score );
         temp = mOpenSet[parent];
@@ -537,9 +526,7 @@ bool Search::tracePath( const int &key, std::vector<Pos> & _posPath  )
   for( int i = 0; i < b; i++ )
      { mPath.push_back( backPath[ b - 1- i] );
 	   Pos p;
-	   p.x = (int) mNodes[mPath[i] ].x;
-	   p.y = (int) mNodes[mPath[i] ].y;
-	   p.z = (int) mNodes[mPath[i] ].z;
+	   p = mNodes[mPath[i] ].pos;
 	   _posPath.push_back( p ); 
 	 }
 
