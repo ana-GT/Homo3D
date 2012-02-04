@@ -13,17 +13,25 @@
 #include <vector>
 #include <stdlib.h>
 
+/**
+ * @struct Cost
+ */
+struct Cost {
+	double F;
+	double G;
+	double H;
+};
 
+/**
+ * @struct Node
+ */
 struct Node {
 	int index;
-	double x; double y; double z;
+	Pos pos;
 	std::vector<int> neighbors;
 	double value;
 	double brushDistance; // For updating the nodes' values
-
-	double costF;
-	double costG;
-	double costH;
+	Cost cost;
 	int status;
 	int parent;
 };
@@ -45,8 +53,8 @@ public:
 	
 
  	//-- Search specific
-	std::vector<Pos> FindPath( double _startX, double _startY, double _startZ, double _goalX, double _goalY, double _goalZ );
-	std::vector< std::vector<Pos> > FindDiversePaths( double _startX, double _startY, double _startZ, double _goalX, double _goalY, double _goalZ, int _times );
+	std::vector<Pos> FindPath( Pos _start, Pos _goal );
+	std::vector< std::vector<Pos> > FindDiversePaths( Pos _start, Pos _goal, int _times );
     void UpdateNodeValues( std::vector<int> _path );
 	std::vector<int> JoinPaths( std::vector< std::vector<int> >  _allPaths );
     void ResetSearch();
@@ -58,10 +66,10 @@ public:
 	double edgeCost( int _nodeFrom, int _nodeTo, double _value );
 
 	//-- Instance variables
-	std::vector<Node> mNodes;
+	Node *mNodes;
 
-	int mNumCells;
-	double mCellNeighborRange;
+	int mNumNodes;
+	double mNodeNeighborRange;
 	struct kdtree *mKdTree;
 
 	//-- Class constant
@@ -71,6 +79,7 @@ public:
 
 	//-- Search specific stuff
 	std::vector< int > mOpenSet;
+	int *HT;
 	double mEpsilon;
 	std::vector<int> mPath;
 
