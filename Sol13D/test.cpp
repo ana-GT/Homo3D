@@ -35,6 +35,7 @@ int main( int argc, char *argv[] ) {
     g.CreateExternalBoundary();
 	g.CreateBox( 20, 20, 10, 10, 40, 60 );
 	g.CreateBox( 50, 20, 10, 10, 40, 60 );
+	//g.CreateBox( 20, 20, 30, 40, 40, 20 );
 
 	//-- See how it looks
 	g.Visualization();
@@ -52,14 +53,18 @@ int main( int argc, char *argv[] ) {
 	//-- Create a Search object
 
 	gRidge = tg3d.GetDTRidge();	
-	mSearch = new Search( &gRidge );
+	std::vector<Cell> free = tg3d.GetFreeCells(); 
+	mSearch = new Search( &free );
 
 	printf(" Start search \n");
 	int n = gRidge.size() - 1;
 
 	Pos start; start.x = 10, start.y = 10; start.z = 40;
 	Pos goal; goal.x = 70, goal.y = 70; goal.z = 40;
-	std::vector< std::vector<Pos> >  paths = mSearch->FindDiversePaths( start, goal, 2 );
+	//Pos start; start.x = 40, start.y = 50; start.z = 25;
+	//Pos goal; goal.x = 40, goal.y = 10; goal.z = 55;
+
+	std::vector< std::vector<Pos> >  paths = mSearch->FindDiversePaths( start, goal, 8 );
 
 
 	printf("End Search \n");

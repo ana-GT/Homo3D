@@ -79,6 +79,7 @@ public:
 
 	//-- Search specific stuff
 	std::vector< int > mOpenSet;
+	int *HT;
 	double mEpsilon;
 	std::vector<int> mPath;
 

@@ -24,6 +24,8 @@ Search::Search( std::vector<Cell> *_cells ) {
 	mKdTree = kd_create( 3 ); // 2-dimensional space
 
 	mNodes = new Node[mNumNodes];
+	HT = new int[mNumNodes];
+	std::fill( HT, HT + mNumNodes, -1 );
 
 	for( int i = 0; i < mNumNodes; ++i ) { 
 		uintptr_t id = i; 
@@ -83,7 +85,13 @@ Search::Search( std::vector<Cell> *_cells ) {
  */
 Search::~Search() {
 	kd_free( mKdTree );
-	delete [] mNodes;
+	if( mNodes != NULL ) {
+		delete [] mNodes;
+	}
+	if( HT != NULL ) {
+		delete [] HT;
+	}
+
 }
 
 
@@ -375,25 +383,32 @@ void Search::pushOpenSet( int _key ) {
 
   // If this is the first element added
   if( n == 0 )
-    { return; }
+    { HT[_key] = n;
+	  return; }
 
   // If not, start on the bottom and go up
   node = n;
 
+  int qp; int qn;
+
   while( node != 0 )
   {
     parent = floor( (node - 1)/2 );
+	qp = mOpenSet[parent];
+    qn = mOpenSet[node];
     // Always try to put new nodes up
-    if( mNodes[ mOpenSet[parent] ].cost.F >= mNodes[ mOpenSet[node] ].cost.F )
+    if( mNodes[qp].cost.F >= mNodes[qn].cost.F )
       {
         temp = mOpenSet[parent];
-        mOpenSet[parent] = mOpenSet[node];
-        mOpenSet[node] = temp; 
+        mOpenSet[parent] = qn; HT[qn] = parent; 
+        mOpenSet[node] = temp; HT[temp] = node; 
         node = parent; 
       }  
     else
      { break; }
   }   
+
+  HT[_key] = node;
 
 }
 
@@ -417,12 +432,13 @@ int Search::popOpenSet() {
   // Reorder your binary heap
   bottom = mOpenSet.size() - 1;
 
-  mOpenSet[0] = mOpenSet[bottom];
+  mOpenSet[0] = mOpenSet[bottom]; HT[ mOpenSet[bottom] ] = 0;
   mOpenSet.pop_back();
   n = mOpenSet.size();
 
   int u = 0;
 
+  int qu;
   while( true )
   {
     node = u;
@@ -443,10 +459,11 @@ int Search::popOpenSet() {
          { u = child_1; }
      }
     
+	qu = mOpenSet[u];
     if( node != u )
      { temp = mOpenSet[node];
-       mOpenSet[node] = mOpenSet[u];
-       mOpenSet[u] = temp; 
+       mOpenSet[node] = qu; HT[qu] = node;
+       mOpenSet[u] = temp; HT[temp] = u; 
      }
 
     else
@@ -467,30 +484,36 @@ void Search::updateLowerOpenSet( int key ) {
   int temp;
 
   //-- Find your guy
+  n = HT[key];
+/*
   for( int i = 0; i < mOpenSet.size(); i++ )
   {
     if( mOpenSet[i] == key )
     { n = i; break; }
   }
+*/
 
-  //printf(" Start pos: %d f: %f \n ", n, nodes_[ openSet_[n] ].f_score );
   //-- If it happens to be the first element
   if( n == 0 )
-    { return; }
+    { return; } //-- HT[ID] = 0; // the same
 
   //-- If not, start on the bottom and go up
   node = n;
 
+  int qp; int qn;
+
   while( node != 0 )
   { 
     parent = floor( (node - 1)/2 );
+
+	qp = mOpenSet[parent]; qn = mOpenSet[node];
     // Always try to put new nodes up
-    if( mNodes[ mOpenSet[parent] ].cost.F > mNodes[ mOpenSet[node] ].cost.F )
+    if( mNodes[ qp ].cost.F > mNodes[ qn ].cost.F )
       {
         //printf(" Parent pos: %d f: %f \n ", parent, nodes_[ openSet_[parent] ].f_score );
         temp = mOpenSet[parent];
-        mOpenSet[parent] = mOpenSet[node];
-        mOpenSet[node] = temp; 
+        mOpenSet[parent] = qn; HT[qn] = parent;
+        mOpenSet[node] = temp; HT[temp] = node; 
         node = parent; 
       }  
     else
