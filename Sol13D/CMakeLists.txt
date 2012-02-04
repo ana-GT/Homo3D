@@ -30,3 +30,4 @@ set ( HDR_FILES
 
 add_executable ( test ${SRC_FILES} ${HDR_FILES} )
 target_link_libraries( test ${PCL_LIBRARIES} )	
+

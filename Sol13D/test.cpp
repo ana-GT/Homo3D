@@ -6,7 +6,9 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/cloud_viewer.h>
-
+#include <pcl/visualization/pcl_visualizer.h>
+#include <stdio.h>
+#include <string>
 
 #include "test.h"
 
@@ -64,7 +66,7 @@ int main( int argc, char *argv[] ) {
 	//Pos start; start.x = 40, start.y = 50; start.z = 25;
 	//Pos goal; goal.x = 40, goal.y = 10; goal.z = 55;
 
-	std::vector< std::vector<Pos> >  paths = mSearch->FindDiversePaths( start, goal, 8 );
+	std::vector< std::vector<Pos> >  paths = mSearch->FindDiversePaths( start, goal, 4 );
 
 
 	printf("End Search \n");
@@ -75,62 +77,76 @@ int main( int argc, char *argv[] ) {
 	
 }
 
+/*
+void DrawGrid3D( pcl::visualization::PCLVisualizer *_viewer ) {
+	viewer->addCloud
+}
+*/
 /**
  * @function DrawPath
  */
 void DrawResult( Grid3D *_g, std::vector< std::vector<Pos> >  _paths ) {
 
-	pcl::PointCloud<pcl::PointXYZRGB>::Ptr objects( new pcl::PointCloud<pcl::PointXYZRGB> );
+	//-- Obstacles
+	pcl::PointCloud<pcl::PointXYZ>::Ptr objectsCloud( new pcl::PointCloud<pcl::PointXYZ> );
 
-	objects->height = 1;
-	objects->is_dense = false;
-	objects->points.resize( 0 );
+	objectsCloud->height = 1;
+	objectsCloud->is_dense = false;
+	objectsCloud->points.resize( 0 );
 
-	uint8_t r = 0; 
-	uint8_t g =  0; 
-	uint8_t b = 255;			
-    uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)g << 8 | (uint32_t)b);
-
-	pcl::PointXYZRGB q;
-
-	//-- Obstacles		
+	pcl::PointXYZ q;
+		
 	for( unsigned int i = 0; i < _g->GetSizeX(); i++ ) {	
 		for( unsigned int j = 0; j < _g->GetSizeY(); j++ ) {
 			for( unsigned int k = 0; k < _g->GetSizeZ(); ++k ) {
 				if( _g->GetState( i, j, k ) == true ) { // Obstacle
-					q.x = (double) i;
-					q.y = (double) j;
-					q.z = (double) k;				
-					q.rgb = *reinterpret_cast<float*>(&rgb);
-					objects->points.push_back(q);       
+					q.x = (double) i; q.y = (double) j; q.z = (double) k;				
+					objectsCloud->points.push_back(q);       
 				}
 			}
 		}
 	}
 
+	//-- Paths
+	int numPaths = _paths.size();
+	std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> pathCloud;
 
-	r = 255; g =  0; b = 0;			
-    rgb = ((uint32_t)r << 16 | (uint32_t)g << 8 | (uint32_t)b);
-
-	//-- Path
-	for( int i = 0; i < _paths.size(); ++i ) {
+	for( size_t i = 0; i < numPaths; ++i ) {
+		pcl::PointCloud<pcl::PointXYZ>::Ptr pc( new pcl::PointCloud<pcl::PointXYZ> );
 		printf("Size Path [%d]: %d \n", i, _paths[i].size() );
 		for( int j = 0; j < _paths[i].size(); ++j ) {
 			q.x = _paths[i][j].x;
 			q.y = _paths[i][j].y;
 			q.z = _paths[i][j].z;
-			q.rgb = *reinterpret_cast<float*>(&rgb);
-			objects->points.push_back(q);
+			pc->points.push_back(q);
 		}  		
+		pathCloud.push_back( pc );
 	}
 
-	pcl::visualization::CloudViewer viewer( "Path Visualization" );
-	viewer.showCloud( objects );
-	while( !viewer.wasStopped() ) {		
-	}	
+
+	pcl::visualization::PCLVisualizer *viewer;
+	viewer = new pcl::visualization::PCLVisualizer( "Test PCL" );
+
+	viewer->setBackgroundColor( 0.0, 0.0, 0.0 );
+	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> objectsColor( objectsCloud, 0, 0, 255 );
+	viewer->addPointCloud<pcl::PointXYZ>(objectsCloud, objectsColor, "Objects Cloud");
+
+
+	for( size_t i = 0; i < numPaths; ++i ) {
+		for( int j = 0; j < pathCloud[i]->points.size() - 1; ++j ) {
+
+		char linename[12];	
+		sprintf( linename, "line%d-%d", i,j );
+		std::string id(linename);
+
+		viewer->addLine<pcl::PointXYZ>( pathCloud[i]->points[j], pathCloud[i]->points[j + 1], id );
+		}
+	}
+	
+	while( !viewer->wasStopped() ) {
+		viewer->spinOnce(100);
+	}
 		
 
 }
-
-
 
