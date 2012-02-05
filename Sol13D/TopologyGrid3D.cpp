@@ -43,7 +43,7 @@ TopologyGrid3D::TopologyGrid3D( Grid3D *_g ) {
     Cell cell; Pos p; int index;
 
 	//-- Create basic nodes
-	index = 0;
+	index = 0; 
 	for( int i = 0; i < mSizeX; ++i ) {
 		for( int j = 0; j <	mSizeY; ++j ) {
 			for( int k = 0; k <	mSizeZ; ++k ) {
@@ -59,7 +59,7 @@ TopologyGrid3D::TopologyGrid3D( Grid3D *_g ) {
 			}		
 		}		
 	}
-	
+
 }
 
 /**
@@ -76,7 +76,7 @@ void TopologyGrid3D::CalculateDT() {
 
 	printf("--) Calculating DT \n");
 	std::vector<int> queue;
-	
+
 	//-- 1. Initialize queue with obstacle grids and set distances to zero for them
 	for( int i = 0; i < mSizeX; ++i ) {
 		for( int j = 0; j < mSizeY; ++j ) {
@@ -93,7 +93,6 @@ void TopologyGrid3D::CalculateDT() {
 
 	//-- 2. Loop until no more new elements in Queue
 	std::vector<int> newQueue(0);
-
 	while( queue.size() > 0 ) {
 
 		for( int i = 0; i < queue.size(); ++i ) {
@@ -107,6 +106,7 @@ void TopologyGrid3D::CalculateDT() {
 					newQueue.push_back( n[j] );
 				}
 			}
+
 		}
 
 		queue.clear();

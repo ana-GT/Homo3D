@@ -36,29 +36,47 @@
  *
  */	
 
+#include <stdio.h>
+#include <unistd.h>
+#include <time.h>
 #include "BlackSheep.h"
 
 /**
- *
+ * @
  */
 int main( int argc, char* argv[] ) {
 	
-	BS bs( 50, 50, 50 );
+	BS bs( 80, 80, 80 );
 
 	bs.CreateExternalBoundary();
-	bs.CreateBox( 10, 20, 10, 20, 10, 30 );
+	bs.CreateBox(  20, 20, 10, 10, 40, 60  );
+	bs.CreateBox( 50, 20, 10, 10, 40, 60 );
+
+
+	//-- Debugging. Damn
+	time_t ts; time_t tf; double dt; 
+    ts = clock();
     bs.CalculateDT();
+	tf = clock();
+	printf("--** End DT construction process: Time elapsed: %.3f  \n", (double) (tf - ts)/CLOCKS_PER_SEC );
+
+
+	std::vector< std::vector<Eigen::Vector3i> > paths;
+	paths = bs.FindVarietyPaths( 10, 10, 40, 70, 70, 40, 1 );
 
     pcl::visualization::PCLVisualizer *viewer;
 	viewer = new pcl::visualization::PCLVisualizer( "Test Black Sheep" );
 
-	bs.ViewVoronoi( viewer, 255, 0, 0 );
+	//bs.ViewVoronoi( viewer, 255, 0, 0 );
 	bs.ViewObstacles( viewer, 0, 255, 0 );
-
-	
+	for( size_t i = 0; i < paths.size(); ++i ) {
+		bs.ViewPath( paths[i], viewer, 255, 0, 0);
+	}
 	while( !viewer->wasStopped() ) {
 		viewer->spin();
 	}
+
+	return 0;
 }
 
 

@@ -8,7 +8,7 @@
 #include <cfloat>
 
 const int Search::sMaxIter = 500000;
-const int Search::sNominalValue = 1.0;
+const double Search::sNominalValue = 1.0;
 const double Search::SEARCH_INF = DBL_MAX;
 
 /**

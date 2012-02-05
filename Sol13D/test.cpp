@@ -9,6 +9,8 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <stdio.h>
 #include <string>
+#include <stdlib.h>
+#include <time.h>
 
 #include "test.h"
 
@@ -30,6 +32,8 @@ void DrawResult( Grid3D *_g, std::vector< std::vector<Pos> >  _paths );
  * @function main  
  */
 int main( int argc, char *argv[] ) {
+
+	srand( time(NULL) );
 
 	//-- Create grid
     Grid3D g( 80, 80, 80 );
@@ -57,7 +61,7 @@ int main( int argc, char *argv[] ) {
 	gRidge = tg3d.GetDTRidge();	
 	std::vector<Cell> free = tg3d.GetFreeCells(); 
 	mSearch = new Search( &free );
-
+	//mSearch = new Search( &gRidge );
 	printf(" Start search \n");
 	int n = gRidge.size() - 1;
 
@@ -133,13 +137,17 @@ void DrawResult( Grid3D *_g, std::vector< std::vector<Pos> >  _paths ) {
 
 
 	for( size_t i = 0; i < numPaths; ++i ) {
+		double r; double g; double b;
+		r = ( rand() % 256 )/255.0;
+		g = ( rand() % 256 )/255.0;
+		b = ( rand() % 256 )/255.0;
 		for( int j = 0; j < pathCloud[i]->points.size() - 1; ++j ) {
 
 		char linename[12];	
 		sprintf( linename, "line%d-%d", i,j );
 		std::string id(linename);
 
-		viewer->addLine<pcl::PointXYZ>( pathCloud[i]->points[j], pathCloud[i]->points[j + 1], id );
+		viewer->addLine<pcl::PointXYZ>( pathCloud[i]->points[j], pathCloud[i]->points[j + 1], r, g, b, id );
 		}
 	}
 	

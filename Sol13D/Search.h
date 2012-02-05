@@ -112,7 +112,7 @@ public:
 
 	//-- Class constant
 	static const int sMaxIter;
-	static const int sNominalValue;
+	static const double sNominalValue;
 	static const double SEARCH_INF;
 
 	//-- Search specific stuff
