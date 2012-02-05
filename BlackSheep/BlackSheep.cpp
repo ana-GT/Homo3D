@@ -72,6 +72,8 @@ BS::BS( int _sizeX, int _sizeY, int _sizeZ ) {
 	mNodes = new Node3D[mNumNodes];
 	mGeometricNeighbors = new std::vector<int>[mNumNodes];
 
+	mCountPaths = 0;
+
 	//-- Create nodes
 	int index;
 	for( size_t i = 0; i < mSizeX; ++i ) {
@@ -269,7 +271,6 @@ void BS::CalculateDT() {
 	}
 	printf("--) Finishing calculating DT \n");
 
-
 }
 
 /**
@@ -362,17 +363,137 @@ std::vector< std::vector<Eigen::Vector3i> > BS::FindVarietyPaths( int _x1, int _
 
 	std::vector< std::vector<Eigen::Vector3i> > paths;
     std::vector<Eigen::Vector3i> path;
+	std::vector< std::vector<int> > nodePaths;
+	std::vector<int> allNodePaths;
 
 	InitSearch();
+
 	for( size_t i = 0; i < _times; ++i ) {
+		path.resize(0);
 		path = FindPath( _x1, _y1, _z1, _x2, _y2, _z2 );
-		printf("Out of findPATH \n");
 		paths.push_back( path );
+		nodePaths.push_back( mPath );
+		//-- Update the values
+		allNodePaths = JoinPaths( nodePaths );
+		UpdateNodeValues( allNodePaths );
+		// Reset the search
+		ResetSearch();
 	}
 
 	return paths;
 }
 
+/**
+ * @function CalculateDTPaths
+ */
+void BS::CalculateDTPaths( std::vector<int> _path ) {
+
+	printf("--) Calculating DT Paths \n");
+	std::vector<int> queue = _path;
+
+	//-- 1. Initialize queue with _path nodes and set distances to zero for them
+	for( int i = 0; i < mNumNodes; ++i ) {
+		if( mNodes[i].state == FREE_STATE ) {
+			mNodes[i].s.brushDist = BS_INF;
+		} else {
+			mNodes[i].s.brushDist = 0;
+		}
+	}
+
+	// Path nodes with zero initial value
+	for( int i = 0; i < _path.size(); ++i ) {
+		mNodes[ _path[i] ].s.brushDist = 0;
+	}
+	
+
+	//-- 2. Loop until no more new elements in Queue
+	std::vector<int> newQueue(0);
+
+	while( queue.size() > 0 ) {
+
+		for( int i = 0; i < queue.size(); ++i ) {
+			std::vector<int> n = mGeometricNeighbors[ queue[i] ];
+			double dist = mNodes[ queue[i] ].s.brushDist;
+
+			for( int j = 0; j < n.size(); ++j ) {
+				double new_dist = dist + EdgeCost( queue[i], n[j], sNominalValue );
+				if( new_dist < mNodes[ n[j] ].s.brushDist ) {
+					mNodes[ n[j] ].s.brushDist = new_dist;
+					newQueue.push_back( n[j] );
+				}
+			}
+		}
+
+		queue.clear();
+		queue = newQueue;
+		newQueue.clear();
+
+	}
+	printf("--) Finishing calculating DT Paths \n");
+}
+
+/**
+ * @function UpdateNodeValues
+ */
+void BS::UpdateNodeValues( std::vector<int> _path ) {
+	CalculateDTPaths(_path );	
+
+	//-- Our DT is ready. Let's check the minimum and maximum guys
+	float minBrushDist = BS_INF;
+	float maxBrushDist = -BS_INF;
+
+	for( int i = 0; i < mNumNodes; ++i ) {
+		if( mNodes[i].s.brushDist < minBrushDist ) {
+			minBrushDist = mNodes[i].s.brushDist;
+		}
+
+		if( mNodes[i].s.brushDist > maxBrushDist ) {
+			maxBrushDist = mNodes[i].s.brushDist;
+		}
+		
+	}
+
+	printf("--(i) Min and max: %f , %f \n", minBrushDist, maxBrushDist );
+
+
+	//-- Update accordingly
+	for( int i = 0; i < mNumNodes; ++i ) {
+		mNodes[i].s.value = ( maxBrushDist - mNodes[i].s.brushDist ) + sNominalValue;
+	}
+
+}
+
+/**
+ * @function JoinPaths
+ * @brief FIXME CUT OFF REPEATED GUYS	
+ */
+std::vector<int> BS::JoinPaths( std::vector< std::vector<int> >  _allPaths ) {
+
+	std::vector<int> bunchPaths;
+
+	for( int i = 0; i < _allPaths.size(); ++i ) {
+		for( int j = 0; j < _allPaths[i].size(); ++j ) {
+			bunchPaths.push_back( _allPaths[i][j] );			
+		}
+	}
+
+	return bunchPaths;
+}
+
+/**
+ * @function ResetSearch 
+ */
+void BS::ResetSearch() {
+
+	for( int i = 0; i < mNumNodes; ++i ) {
+		mNodes[i].s.costF = BS_INF;
+		mNodes[i].s.costG = BS_INF;
+		mNodes[i].s.costH = BS_INF; 
+		mNodes[i].s.status = IN_NO_SET;
+	}
+
+	mOpenSet.resize(0);
+}
 
 /**
  * @function FindPath
@@ -638,6 +759,7 @@ bool BS::TracePath( const int &_key, std::vector<Eigen::Vector3i> & _path  )
   printf("--> Trace path \n");
   std::vector<int> backPath(0);
 
+  mPath.resize(0);
   _path.resize(0);
 
   int n = _key;
@@ -656,6 +778,7 @@ bool BS::TracePath( const int &_key, std::vector<Eigen::Vector3i> & _path  )
 	   node = &mNodes[ backPath[ b - 1- i] ];
 	   Eigen::Vector3i p; p << node->x, node->y, node->z; 
 	   _path.push_back( p );
+	   mPath.push_back( backPath[b-1-i] );
 	 }
     node = NULL;
   if( _path.size() > 0 )
@@ -733,8 +856,9 @@ void BS::ViewVoronoi( pcl::visualization::PCLVisualizer *_viewer,
 void BS::ViewPath( std::vector<Eigen::Vector3i> _path, pcl::visualization::PCLVisualizer *_viewer,
 				   int _r, int _g, int _b ) {
 
-	pcl::PointXYZ q;
+	printf( "Plotting a path of %d points \n", _path.size() );
 
+	pcl::PointXYZ q;
 	pcl::PointCloud<pcl::PointXYZ>::Ptr pathCloud( new pcl::PointCloud<pcl::PointXYZ> );
 	for( int j = 0; j < _path.size(); ++j ) {
 		q.x = _path[j](0);
@@ -750,11 +874,12 @@ void BS::ViewPath( std::vector<Eigen::Vector3i> _path, pcl::visualization::PCLVi
 
 	for( int j = 0; j < pathCloud->points.size() - 1; ++j ) {
 		char linename[15];	
-		sprintf( linename, "path-%d",j );
+		sprintf( linename, "path%d-%d", mCountPaths, j );
 		std::string id(linename);
 		_viewer->addLine<pcl::PointXYZ>( pathCloud->points[j], pathCloud->points[j + 1], r, g, b, id );
 	}
 
+	mCountPaths++;
 }
 
 /**

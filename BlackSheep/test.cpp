@@ -45,7 +45,7 @@
  * @
  */
 int main( int argc, char* argv[] ) {
-	
+	srand( time(NULL) );
 	BS bs( 80, 80, 80 );
 
 	bs.CreateExternalBoundary();
@@ -62,15 +62,18 @@ int main( int argc, char* argv[] ) {
 
 
 	std::vector< std::vector<Eigen::Vector3i> > paths;
-	paths = bs.FindVarietyPaths( 10, 10, 40, 70, 70, 40, 1 );
+	paths = bs.FindVarietyPaths( 10, 10, 40, 70, 70, 40, 4 );
 
     pcl::visualization::PCLVisualizer *viewer;
 	viewer = new pcl::visualization::PCLVisualizer( "Test Black Sheep" );
 
 	//bs.ViewVoronoi( viewer, 255, 0, 0 );
-	bs.ViewObstacles( viewer, 0, 255, 0 );
+	bs.ViewObstacles( viewer, 0, 0, 255 );
 	for( size_t i = 0; i < paths.size(); ++i ) {
-		bs.ViewPath( paths[i], viewer, 255, 0, 0);
+		int r = rand() % 256;
+		int g = rand() % 256;
+		int b = rand() % 256;
+		bs.ViewPath( paths[i], viewer, r, g, b);
 	}
 	while( !viewer->wasStopped() ) {
 		viewer->spin();

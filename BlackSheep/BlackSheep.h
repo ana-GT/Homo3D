@@ -143,9 +143,12 @@ class BS {
 		
 		std::vector< std::vector<Eigen::Vector3i> > FindVarietyPaths( int _x1, int _y1, int _z1,
 										   				  		  int _x2, int _y2, int _z2, int _times );
-	    //void UpdateNodeValues( std::vector<int> _path );
-		//std::vector<int> JoinPaths( std::vector< std::vector<int> >  _allPaths );
-    	//void ResetSearch();
+
+		void CalculateDTPaths( std::vector<int> _path ); 
+	    void UpdateNodeValues( std::vector<int> _path );
+		std::vector<int> JoinPaths( std::vector< std::vector<int> >  _allPaths );
+    	void ResetSearch();
+
 		void InitSearch();
 		void PushOpenSet( int _key );
 		int PopOpenSet();
@@ -179,6 +182,8 @@ class BS {
 		// Auxiliar stuff for search
 		int *mHT;
 		std::vector< int > mOpenSet;
+		std::vector<int> mPath;
+		int mCountPaths;
 	
 };
 
