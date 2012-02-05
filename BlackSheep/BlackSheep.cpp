@@ -70,6 +70,7 @@ BS::BS( int _sizeX, int _sizeY, int _sizeZ ) {
 	mNumNodes = mSizeX*mSizeY*mSizeZ;
 
 	mNodes = new Node3D[mNumNodes];
+	mGeometricNeighbors = new std::vector<int>[mNumNodes];
 
 	//-- Create nodes
 	int index;
@@ -102,6 +103,10 @@ BS::~BS() {
 	}
 	if( mHT != NULL ) {
 		delete [] mHT;
+	}
+
+	if( mGeometricNeighbors != NULL ) {
+		delete [] mGeometricNeighbors;
 	}
 }
 
@@ -214,8 +219,15 @@ std::vector<int> BS::GetNeighbors( int _ref ) const {
  * @function
  */
 void BS::CalculateDT() {
-	printf("--) Calculating DT \n");
 
+	printf("Getting Geometric Neighbors \n");
+	for( size_t i = 0; i < mNumNodes; ++i ) {
+		mGeometricNeighbors[i] = GetNeighbors(i);
+	}
+	printf("End of Geometric Neighbors \n");
+
+
+	printf("--) Calculating DT \n");
 	std::vector<int> queue;
 
 	//-- 1. Initialize queue with obstacle grids and set distances to zero for them
@@ -238,7 +250,7 @@ void BS::CalculateDT() {
 	while( queue.size() > 0 ) {
 
 		for( int i = 0; i < queue.size(); ++i ) {
-			std::vector<int> n = GetNeighbors( queue[i] );
+			std::vector<int> n = mGeometricNeighbors[ queue[i] ];
 			double dist = mNodes[ queue[i] ].obsDist;
 
 			for( int j = 0; j < n.size(); ++j ) {

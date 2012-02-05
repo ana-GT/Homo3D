@@ -89,7 +89,6 @@ struct Node3D {
 	float obsDist;
 	int index;
 	int state;
-	//std::vector<int> neighbors; // geometric neighbors
 
 	SearchData s;
 };
@@ -175,6 +174,7 @@ class BS {
 		int mStride2;
 
 		Node3D *mNodes;
+		std::vector<int> *mGeometricNeighbors;
 
 		// Auxiliar stuff for search
 		int *mHT;
