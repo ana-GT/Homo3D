@@ -49,8 +49,7 @@ int main( int argc, char* argv[] ) {
 	BS bs( 80, 80, 80 );
 
 	bs.CreateExternalBoundary();
-	bs.CreateBox(  20, 20, 10, 10, 40, 60  );
-	bs.CreateBox( 50, 20, 10, 10, 40, 60 );
+	bs.CreateBox(  20, 10, 20, 40, 60, 40 );
 
 
 	//-- Debugging. Damn
@@ -69,8 +68,10 @@ int main( int argc, char* argv[] ) {
 	int goalY = 75; 
 	int goalZ = 65;
 	int numPaths = 8;
-	float epsilon = 2.0;
-	paths = bs.FindVarietyPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon );
+	float epsilon = 1.0;
+	float alpha = 4.0;
+
+	paths = bs.FindVarietyWeightedPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon, alpha );
 
     pcl::visualization::PCLVisualizer *viewer;
 	viewer = new pcl::visualization::PCLVisualizer( "Test Black Sheep" );

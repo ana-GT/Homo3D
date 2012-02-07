@@ -49,8 +49,7 @@ int main( int argc, char* argv[] ) {
 	BS bs( 80, 80, 80 );
 
 	bs.CreateExternalBoundary();
-	bs.CreateBox(  20, 20, 10, 10, 40, 60  );
-	bs.CreateBox( 50, 20, 10, 10, 40, 60 );
+	bs.CreateBox(  20, 10, 20, 40, 60, 40 );
 
 
 	//-- Debugging. Damn
@@ -62,14 +61,15 @@ int main( int argc, char* argv[] ) {
 
 
 	std::vector< std::vector<Eigen::Vector3i> > paths;
-	int startX = 10;
-	int startY = 5;
-	int startZ = 20;
-	int goalX = 65;
-	int goalY = 75; 
-	int goalZ = 65;
-	int numPaths = 8;
-	float epsilon = 2.0;
+	int startX = 30;
+	int startY = 40;
+	int startZ = 15;
+	int goalX = 40;
+	int goalY = 40; 
+	int goalZ = 70;
+	float epsilon = 1.0;
+	int numPaths = 4;
+
 	paths = bs.FindVarietyPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon );
 
     pcl::visualization::PCLVisualizer *viewer;

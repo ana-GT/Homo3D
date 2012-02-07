@@ -45,6 +45,7 @@ const float BS::BS_SQRT2 = 1.414;
 const float BS::BS_SQRT3 = 1.732;	
 
 const float BS::sNominalValue = 1.0;
+const float BS::sDefaultBrushDist = 1.0;
 
 const int BS::sMaxIter = 500000;
 
@@ -218,7 +219,7 @@ std::vector<int> BS::GetNeighbors( int _ref ) const {
 }
 
 /**
- * @function
+ * @function CalculateDT
  */
 void BS::CalculateDT() {
 
@@ -336,7 +337,8 @@ void BS::InitSearch() {
 	std::fill( mHT, mHT + mNumNodes, -1 );
 
 	mOpenSet.resize(0);
-	
+	mMaxBrushDist = sDefaultBrushDist;	
+
 	//-- Reset the nodes
 	Node3D *node;
 	for( size_t i = 0; i < mNumNodes; ++i ) {
@@ -347,7 +349,7 @@ void BS::InitSearch() {
 		node->s.costG = BS_INF;
 		node->s.costH = BS_INF;
 		node->s.value = sNominalValue;
-		node->s.brushDist = BS_INF;
+		node->s.brushDist = sDefaultBrushDist; // Initially all have the same brushDist for the first search
 		node->s.status = IN_NO_SET;
 		node->s.parent = -1;
 	}
@@ -359,8 +361,9 @@ void BS::InitSearch() {
  * @function FindVarietyPaths
  */
 std::vector< std::vector<Eigen::Vector3i> > BS::FindVarietyPaths( int _x1, int _y1, int _z1,
-									   			   	  		      int _x2, int _y2, int _z2, int _times ) {
+									   			   	  		      int _x2, int _y2, int _z2, int _times, float _epsilon ) {
 
+	mEpsilon = _epsilon;
 	std::vector< std::vector<Eigen::Vector3i> > paths;
     std::vector<Eigen::Vector3i> path;
 	std::vector< std::vector<int> > nodePaths;
@@ -453,6 +456,8 @@ void BS::UpdateNodeValues( std::vector<int> _path ) {
 		
 	}
 
+	mMaxBrushDist = maxBrushDist;
+
 	printf("--(i) Min and max: %f , %f \n", minBrushDist, maxBrushDist );
 
 
@@ -517,7 +522,7 @@ std::vector<Eigen::Vector3i> BS::FindPath( int _x1, int _y1, int _z1,
 	node = &mNodes[nodeStart];
 	node->s.costG = 0;
 	node->s.costH = CostHeuristic( nodeStart, nodeTarget );
-	node->s.costF = node->s.costG + node->s.costH;
+	node->s.costF = node->s.costG + mEpsilon*node->s.costH;
 	node->s.parent = -1;
 	node->s.status = IN_NO_SET;
 
@@ -554,14 +559,14 @@ std::vector<Eigen::Vector3i> BS::FindPath( int _x1, int _y1, int _z1,
 			}
 			
 			int y = mNodes[ neighbors[i] ].index; // Same as neighbors[i] actually
-			double tentative_G_score = mNodes[x].s.costG + EdgeCost( x, y, mNodes[y].s.value );
+			double tentative_G_score = mNodes[x].s.costG + mEpsilon*EdgeCost( x, y, mNodes[y].s.value );
 			
 			if( mNodes[y].s.status != IN_OPEN_SET ) {
 				node = &mNodes[y];
 				node->s.parent = x;
 				node->s.costG = tentative_G_score;
 				node->s.costH = CostHeuristic( y, nodeTarget );
-				node->s.costF = node->s.costG + node->s.costH;
+				node->s.costF = node->s.costG + mEpsilon*node->s.costH;
 				PushOpenSet(y);
 			}
 			else {
@@ -570,7 +575,7 @@ std::vector<Eigen::Vector3i> BS::FindPath( int _x1, int _y1, int _z1,
 					node->s.parent = x;
 					node->s.costG = tentative_G_score;
 					node->s.costH = CostHeuristic( y, nodeTarget );
-					node->s.costF = node->s.costG + node->s.costH;
+					node->s.costF = node->s.costG + mEpsilon*node->s.costH;
 					//-- Reorder your OpenSet
 					UpdateLowerOpenSet( y );				
 				}

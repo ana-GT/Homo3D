@@ -49,9 +49,10 @@ int main( int argc, char* argv[] ) {
 	BS bs( 80, 80, 80 );
 
 	bs.CreateExternalBoundary();
-	bs.CreateBox(  20, 20, 10, 10, 40, 60  );
-	bs.CreateBox( 50, 20, 10, 10, 40, 60 );
-
+	bs.CreateBox(  20, 20, 10, 40, 40, 10 );
+	bs.CreateBox(  20, 20, 50, 40, 40, 10 );
+	bs.CreateBox(  20, 20, 20, 10, 40, 30 );
+	bs.CreateBox(  50, 20, 20, 10, 40, 30 );
 
 	//-- Debugging. Damn
 	time_t ts; time_t tf; double dt; 
@@ -62,15 +63,17 @@ int main( int argc, char* argv[] ) {
 
 
 	std::vector< std::vector<Eigen::Vector3i> > paths;
-	int startX = 10;
+	int startX = 40;
 	int startY = 5;
-	int startZ = 20;
-	int goalX = 65;
-	int goalY = 75; 
-	int goalZ = 65;
-	int numPaths = 8;
-	float epsilon = 2.0;
-	paths = bs.FindVarietyPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon );
+	int startZ = 15;
+	int goalX = 50;
+	int goalY = 70; 
+	int goalZ = 75;
+	int numPaths = 3;
+	float epsilon = 1.0;
+	float alpha = 4.0;
+
+	paths = bs.FindVarietyWeightedPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon, alpha );
 
     pcl::visualization::PCLVisualizer *viewer;
 	viewer = new pcl::visualization::PCLVisualizer( "Test Black Sheep" );

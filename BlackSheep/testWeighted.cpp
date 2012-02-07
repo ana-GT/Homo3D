@@ -68,9 +68,11 @@ int main( int argc, char* argv[] ) {
 	int goalX = 65;
 	int goalY = 75; 
 	int goalZ = 65;
-	int numPaths = 8;
-	float epsilon = 2.0;
-	paths = bs.FindVarietyPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon );
+	int numPaths = 3;
+	float epsilon = 1.0;
+	float alpha = 4.0;
+
+	paths = bs.FindVarietyWeightedPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon, alpha );
 
     pcl::visualization::PCLVisualizer *viewer;
 	viewer = new pcl::visualization::PCLVisualizer( "Test Black Sheep" );

@@ -140,16 +140,22 @@ class BS {
 		//-- Search especific functions
 		std::vector<Eigen::Vector3i> FindPath( int _x1, int _y1, int _z1,
 											   int _x2, int _y2, int _z2 );
+		std::vector<Eigen::Vector3i> FindWeightedPath( int _x1, int _y1, int _z1,
+										   			   int _x2, int _y2, int _z2 );
 		
 		std::vector< std::vector<Eigen::Vector3i> > FindVarietyPaths( int _x1, int _y1, int _z1,
-										   				  		  int _x2, int _y2, int _z2, int _times );
+										   				  		  int _x2, int _y2, int _z2, int _times, float _epsilon = 1.0 );
+		std::vector< std::vector<Eigen::Vector3i> > FindVarietyWeightedPaths( int _x1, int _y1, int _z1,
+									   			   	  		      		  	  int _x2, int _y2, int _z2, 
+																		  	  int _times, float _epsilon = 1.0, 
+																		  	  float _alpha = 1.0 );
 
 		void CalculateDTPaths( std::vector<int> _path ); 
 	    void UpdateNodeValues( std::vector<int> _path );
 		std::vector<int> JoinPaths( std::vector< std::vector<int> >  _allPaths );
     	void ResetSearch();
 
-		void InitSearch();
+		void InitSearch( );
 		void PushOpenSet( int _key );
 		int PopOpenSet();
 		void UpdateLowerOpenSet( int key );
@@ -165,7 +171,9 @@ class BS {
 		static const float BS_SQRT2;
 		static const float BS_SQRT3;	
 		static const float sNominalValue;
+		static const float sDefaultBrushDist;
 		static const int sMaxIter; 
+
 
 	private:
 		int mSizeX;
@@ -184,6 +192,9 @@ class BS {
 		std::vector< int > mOpenSet;
 		std::vector<int> mPath;
 		int mCountPaths;
+		float mEpsilon;
+		float mAlpha;
+		float mMaxBrushDist;
 	
 };
 
