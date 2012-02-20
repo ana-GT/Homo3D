@@ -39,7 +39,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
-#include "BlackSheep.h"
+#include "BS_PaperVersion.h"
 
 /**
  * @
@@ -49,8 +49,10 @@ int main( int argc, char* argv[] ) {
 	BS bs( 80, 80, 80 );
 
 	bs.CreateExternalBoundary();
-	bs.CreateBox(  20, 10, 20, 40, 60, 40 );
-
+	bs.CreateBox(  20, 20, 10, 40, 40, 10 );
+	bs.CreateBox(  20, 20, 50, 40, 40, 10 );
+	bs.CreateBox(  20, 20, 20, 10, 40, 30 );
+	bs.CreateBox(  50, 20, 20, 10, 40, 30 );
 
 	//-- Debugging. Damn
 	time_t ts; time_t tf; double dt; 
@@ -61,21 +63,19 @@ int main( int argc, char* argv[] ) {
 
 
 	std::vector< std::vector<Eigen::Vector3i> > paths;
-	int startX = 30;
-	int startY = 40;
-	int startZ = 15;
-	int goalX = 40;
-	int goalY = 40; 
-	int goalZ = 70;
+	int startX = 40;
+	int startY = 5;
+	int startZ = 40;
+	int goalX = 50;
+	int goalY = 70; 
+	int goalZ = 40; // 75
 	int numPaths = 4;
-	float epsilon = 1.0;
-	float alpha = 4.0;
+	float alpha = 1;
 
-	paths = bs.FindVarietyWeightedPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, epsilon, alpha );
+	paths = bs.FindVarietyPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, alpha );
 
     pcl::visualization::PCLVisualizer *viewer;
 	viewer = new pcl::visualization::PCLVisualizer( "Test Black Sheep" );
-    viewer->setBackgroundColor( 1.0, 1.0, 1.0);
 
 	//bs.ViewVoronoi( viewer, 255, 0, 0 );
 	bs.ViewObstacles( viewer, 0, 0, 255 );
