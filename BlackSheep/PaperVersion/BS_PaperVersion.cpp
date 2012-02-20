@@ -378,6 +378,7 @@ std::vector< std::vector<Eigen::Vector3i> > BS::FindVarietyPaths( int _x1, int _
 		nodePaths.push_back( mPath );
 		//-- Update the values
 		allNodePaths = JoinPaths( nodePaths );
+		printf("allNodePaths size: %d \n", allNodePaths.size() );
 		UpdateNodeValues( allNodePaths );
 		// Reset the search
 		ResetSearch();
@@ -463,7 +464,8 @@ void BS::UpdateNodeValues( std::vector<int> _path ) {
 
 	//-- Update accordingly
 	for( int i = 0; i < mNumNodes; ++i ) {
-		mNodes[i].s.value = ( maxBrushDist - mNodes[i].s.brushDist );
+		//mNodes[i].s.value = ( maxBrushDist - mNodes[i].s.brushDist );
+        mNodes[i].s.value = ( maxBrushDist - mNodes[i].s.brushDist )/maxBrushDist;
 	}
 
 }

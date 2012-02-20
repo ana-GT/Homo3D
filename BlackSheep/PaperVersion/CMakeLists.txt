@@ -22,3 +22,5 @@ set ( HDR_FILES
 
 add_executable ( test test.cpp ${SRC_FILES} ${HDR_FILES} )
 target_link_libraries( test ${PCL_LIBRARIES} )	
+add_executable ( test2 test2.cpp ${SRC_FILES} ${HDR_FILES} )
+target_link_libraries( test2 ${PCL_LIBRARIES} )	

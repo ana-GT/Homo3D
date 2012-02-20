@@ -69,8 +69,8 @@ int main( int argc, char* argv[] ) {
 	int goalX = 50;
 	int goalY = 70; 
 	int goalZ = 40; // 75
-	int numPaths = 4;
-	float alpha = 1;
+	int numPaths = 8;
+	float alpha = 0.01;
 
 	paths = bs.FindVarietyPaths( startX, startY, startZ, goalX, goalY, goalZ, numPaths, alpha );
 
