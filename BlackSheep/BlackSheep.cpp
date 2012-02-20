@@ -827,6 +827,38 @@ void BS::ViewObstacles( pcl::visualization::PCLVisualizer *_viewer,
 }
 
 /**
+ * @function ViewFreeSpace
+ */
+void BS::ViewFreeSpace( pcl::visualization::PCLVisualizer *_viewer,
+					    int _r, int _g, int _b ) {
+
+	pcl::PointCloud<pcl::PointXYZ>::Ptr freeSpaceCloud( new pcl::PointCloud<pcl::PointXYZ> );
+
+	freeSpaceCloud->height = 1;
+	freeSpaceCloud->is_dense = false;
+	freeSpaceCloud->points.resize( 0 );
+
+	pcl::PointXYZ q;
+		
+	for( size_t i = 0; i < mSizeX; ++i ) {	
+		for( size_t j = 0; j < mSizeY; ++j ) {
+			for( size_t k = 0; k < mSizeZ; ++k ) {
+				if( GetState( i, j, k ) == FREE_STATE ) { // Obstacle
+					q.x = (double) i; q.y = (double) j; q.z = (double)k;				
+					freeSpaceCloud->points.push_back(q);       
+				}
+			}
+		}
+	}
+
+	pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> freeSpaceColor( freeSpaceCloud, _r, _g, _b );
+
+	_viewer->addPointCloud<pcl::PointXYZ>( freeSpaceCloud, freeSpaceColor, "Free Space Cloud" );
+	
+}
+
+
+/**
  * @function ViewVoronoi
  */
 void BS::ViewVoronoi( pcl::visualization::PCLVisualizer *_viewer,

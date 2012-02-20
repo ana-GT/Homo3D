@@ -44,3 +44,6 @@ target_link_libraries( testWeighted4 ${PCL_LIBRARIES} )
 
 add_executable ( testWeighted5  testWeighted5.cpp ${SRC_FILES} ${HDR_FILES} )
 target_link_libraries( testWeighted5 ${PCL_LIBRARIES} )	
+
+add_executable ( DrawConnectedSet  DrawConnectedSet.cpp ${SRC_FILES} ${HDR_FILES} )
+target_link_libraries( DrawConnectedSet ${PCL_LIBRARIES} )	

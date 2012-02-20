@@ -127,6 +127,8 @@ class BS {
 		//-- Visualization Functions
 		void ViewObstacles( pcl::visualization::PCLVisualizer *_viewer,
 							int _r = 255, int _g = 0, int _b = 0 );
+		void ViewFreeSpace( pcl::visualization::PCLVisualizer *_viewer,
+					    int _r, int _g, int _b );
 		void ViewVoronoi( pcl::visualization::PCLVisualizer *_viewer,
 					      int _r = 255, int _g = 0, int _b = 0 );
 		void ViewPath( std::vector<Eigen::Vector3i> _path, pcl::visualization::PCLVisualizer *_viewer,
